@@ -1,13 +1,16 @@
-package cn.com.bsfit.frms.pay.engine;
+package cn.com.bsfit.frms.pay.engine.conf;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import javax.annotation.PostConstruct;
 import javax.jms.Queue;
 
 import org.hornetq.api.jms.HornetQJMSClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +23,13 @@ import cn.com.bsfit.frms.base.load.DataLoader;
 import cn.com.bsfit.frms.engine.load.BasicDataLoader;
 import cn.com.bsfit.frms.engine.publish.PublishHandler;
 import cn.com.bsfit.frms.engine.rank.SumRiskAnalyzer;
+import cn.com.bsfit.frms.pay.engine.loader.DimensionDataLoader;
+import cn.com.bsfit.frms.pay.engine.publish.StandardPublishHandlerImpl;
 
 @Configuration
 public class LoaderConfig implements FrmsConfigurable {
+	Logger logger = LoggerFactory.getLogger(getClass());
+	
 	@Value("${frms.engine.cloud.threadSize:7}")
 	private int cloudThreadSize;
 
@@ -70,4 +77,13 @@ public class LoaderConfig implements FrmsConfigurable {
     public Queue riskQueue() {
         return HornetQJMSClient.createQueue(riskQueueName);
     }
+	
+	@Value("${frms.license.file:default.lic}")
+	String licenseFile;
+	
+	@PostConstruct
+	public void init(){
+		logger.info("setting license file to {}", licenseFile);
+    	System.setProperty("frms.license", licenseFile);
+	}
 }

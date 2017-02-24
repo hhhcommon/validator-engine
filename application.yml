@@ -15,6 +15,9 @@ java.net.preferIPv4Stack: true
 logging:
  config: file:./logback.xml
  file: logs/frms-engine.log
+ 
+## license file
+frms.license.file: src/main/resources/default.lic.new
 
 #######################################################
 #jms configurations

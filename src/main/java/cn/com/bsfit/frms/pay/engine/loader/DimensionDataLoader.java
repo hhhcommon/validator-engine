@@ -1,4 +1,4 @@
-package cn.com.bsfit.frms.pay.engine;
+package cn.com.bsfit.frms.pay.engine.loader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
@@ -18,14 +19,32 @@ import cn.com.bsfit.frms.base.load.EngineLoader;
 import cn.com.bsfit.frms.base.load.LoadTask;
 import cn.com.bsfit.frms.obj.AuditObject;
 import cn.com.bsfit.frms.obj.MemCachedItem;
+import cn.com.bsfit.frms.serial.MemCachedItemUtils;
 
-public class DimensionDataLoader extends RedisBaseNoSqlLoader implements EngineLoader {
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.BatchPolicy;
+import com.aerospike.client.policy.Replica;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.pool.KryoPool;
+
+public class DimensionDataLoader implements EngineLoader {
     @Value("${frms.engine.biz.code:BR_VAL}")
     private String bizCode;
     private Logger logger = LoggerFactory.getLogger(DimensionDataLoader.class);
 
     @Value("${frms.engine.threadSize:8}")
     private int coreThreadSize;
+    
+    private @Value("${frms.common.aerospike.ns:bsfit}") String defaultNs;
+    private @Value("${frms.common.aerospike.set:frms}") String defaultSet;
+    
+    @Autowired
+    private AerospikeClient aerospikeClient;
+    
+    @Autowired
+    private KryoPool kryoPool;
 
     @Override
     public List<LoadTask> getTask(Object... objects) throws IOException {
@@ -65,45 +84,65 @@ public class DimensionDataLoader extends RedisBaseNoSqlLoader implements EngineL
                 if (aos != null) {
 
                     long t0 = System.currentTimeMillis();
-                    final Map<String, byte[]> memMap = new HashMap<String, byte[]>();
+                    final Map<String, MemCachedItem> memMap = new HashMap<String, MemCachedItem>();
                     Object ip, dfp, uuid, aid;
-                    byte[] item;
                     for (AuditObject ao : aos) {
                         ip = ao.get("ip");
                         dfp = ao.get("dfp");
                         uuid = ao.get("uuid");
                         aid = ao.get("authId");
                         if (!StringUtils.isEmpty(ip)) {
-                        	String key = new MemCachedItem(ip.toString(), "IP", bizCode, 10L).getMemCachedKey();
-                            item = getMemCachedItem(key);
+                        	MemCachedItem item = new MemCachedItem(ip.toString(), "IP", bizCode, 10L);
+                        	String key = item.getMemCachedKey();
                             if(item != null)
                             	memMap.put(key, item);
                         }
 
                         if (!StringUtils.isEmpty(dfp)) {
-                        	String key = new MemCachedItem(dfp.toString(), "DFP", bizCode, 10L).getMemCachedKey();
-                            item = getMemCachedItem(key);
+                        	MemCachedItem item = new MemCachedItem(dfp.toString(), "DFP", bizCode, 10L);
+                        	String key = item.getMemCachedKey();
                             if(item != null)
                             	memMap.put(key, item);
                         }
                         
                         if (!StringUtils.isEmpty(uuid) && !StringUtils.isEmpty(aid)) {
-                        	String key = new MemCachedItem(uuid.toString()+"-"+aid.toString(), "UUID_AID", bizCode, 10L)
-                        						.getMemCachedKey();
-                            item = getMemCachedItem(key);
+                        	MemCachedItem item = new MemCachedItem(uuid.toString()+"-"+aid.toString(), "UUID_AID", bizCode, 10L);
+                        	String key = item.getMemCachedKey();
                             if(item != null)
                             	memMap.put(key, item);
                         }
                     }
+                    
+                    Key[] keys = new Key[memMap.size()];
+                    int i = 0;
+                    for (String str : memMap.keySet()) {
+                        keys[i++] = new Key(defaultNs, defaultSet, str);
+                    }
+                    BatchPolicy batchPolicy = new BatchPolicy();
+                    batchPolicy.replica = Replica.MASTER_PROLES;
+                    Record[] records = aerospikeClient.get(batchPolicy, keys);
 
                     long t1 = System.currentTimeMillis();
+
+                    MemCachedItem tempItem;
+                    Kryo kryo = kryoPool.borrow();
                     long cacheSize = 0;
                     int size = 0;
-                    for(String key : memMap.keySet()){
-                    	size++;
-                    	byte[] bts = memMap.get(key);
-                    	cacheSize += bts.length;
-                    	items.add(valueSerializer.deserialize(bts));
+                    try {
+                        for (Record record : records) {
+                            if (record != null) {
+                                size++;
+                                tempItem = MemCachedItemUtils.asMemCachedItem(record, kryo);
+                                memMap.put(tempItem.getMemCachedKey(), tempItem);
+                                for (Object obj : record.bins.values()) {
+                                    if (obj instanceof byte[]) {
+                                        cacheSize += ((byte[]) obj).length;
+                                    }
+                                }
+                            }
+                        }
+                    } finally {
+                        kryoPool.release(kryo);
                     }
 
                     long t2 = System.currentTimeMillis();
