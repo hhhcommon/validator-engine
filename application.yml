@@ -1,0 +1,129 @@
+#######################################################
+#container level configurations
+#######################################################
+#server configuration
+#Web服务监听端口
+server.port: 9180
+#连接自动释放控制
+tomcat.maxKeepAliveRequests: -1
+##system environments
+java.net.preferIPv4Stack: true
+
+#logging related params
+#工程启动时，加载的日志配置文件
+#定义工程日志文件
+logging:
+ config: file:./logback.xml
+ file: logs/frms-engine.log
+
+#######################################################
+#jms configurations
+#######################################################
+frms.common.jms:
+#多个地址用逗号分割
+  address: localhost:5445
+#连接的存活时间:默认是60000毫秒;-1表示服务器永远不检测超时的连接.
+  connectionTTL: 60000
+#接收者（consumer）流控制:-1 代表大小无限制的缓存;0 代表不缓存消息;>0 代表缓存的最大字节数.
+  consumerWindowSize: 1048576
+#######################################################
+#cloud service url provided by Bangsun
+#邦盛云服务地址
+#######################################################
+service.cloud.url: http://auth.bsfit.com.cn:9090/frms-cloud-service-remote/rest/licence/expire
+#######################################################
+
+#######################################################
+#engine configurations
+#######################################################
+frms:
+ engine:
+#thread pool size to load data.
+#风控引擎核心装载数据的线程池大小
+  threadSize: 4
+#on/off of publishing related MemCachedItem into queue
+#是否将规则触发瞬间的缓存上下文输出到消息中间件
+  memcacheItemPublishEnable: false
+#是否将规则触发瞬间的缓存上下文输出到控制台
+  enableMemcacheItemLogger: false
+#是否推送风险消息到队列
+  riskPublishEnable: false
+#push risks to queue when risk is over {publishWhenRiskScoreOver}
+#最终分值大于某值时，将会发布风险信息。默认大于0就会发布
+  publishWhenRiskScoreOver: 0
+  risk:
+#推送风险消息，定时任务延时配置
+   interval: 1000
+#推送风险消息，批量大小
+   batchSize: 200
+#audit credit 和 group 的消息是否分开发送到三个不同队列
+   queue.split: false
+#on/off of publishing AuditObject into queue
+#调用credit和group接口时,是否将调用日志输出到消息中间件
+  requestPublishEnable: false
+#是否将调用日志输出到消息中间件
+  transLogPublishEnable: false
+  translog:
+#推送translog消息，定时任务延时配置
+   interval: 1000
+#推送translog消息，批量大小
+   batchSize: 200
+  billing:
+#推送billing消息，定时任务延时配置
+   interval: 1000
+#推送billing消息，批量大小
+   batchSize: 200
+#######################################################
+#drools configurations
+#可以配置多个订阅规则包，其中default就是业务编码
+#可以继续指定子参数控制细节
+#######################################################
+  knowledgeLoggerEnable: true
+  drools.default:
+   basicAuth: true
+   username: admin
+   password: bangsun
+   rules: http://10.100.1.236:9090/rs/package/binary/download?id=101
+#######################################################
+
+ frms.engine:
+  biz.code: BR_VAL
+#call namelist server
+#是否启动本地名单表服务
+  namelist.call: false
+#是否打印memcackeitem信息
+  enableMemcacheItemLogger: true  
+
+#######################################################
+#########  JMX日志动态管  #########
+spring.jmx.enabled: true
+endpoints.jolokia.path: /jolokia
+endpoints.jolokia.sensitive: true
+endpoints.jolokia.enabled: true
+
+
+#######################################################
+#存储方式:AEROSPIKE,REDIS,CODIS 必须配置项
+#######################################################
+frms.common:
+ cache:
+  mode: AEROSPIKE
+#aerospike config
+ aerospike:
+  host: 10.100.1.236
+  port: 3000
+#redis config
+ redis:
+  host: localhost
+  port: 6379
+  pass:
+  maxIdle: 300
+  maxTotal: 600
+  maxWaitMillis: 3000
+  testOnBorrow: true
+#codis config
+ codis:
+  zk:
+   list: 10.100.2.210:2181,10.100.2.200:2181
+   proxy.dir: /zk/codis/db_risk/proxy
+   connectionTimeoutMs: 30000
