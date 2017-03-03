@@ -92,7 +92,7 @@ public class MethodTest {
 			        public Mergeable invoke(Object arg0) {
 			            AuditObject ao = (AuditObject) arg0;
 			            
-			            return new MaxIncreaseCountNumber(((int)ao.get("amount")));
+			            return new MaxIncreaseCountNumber(((Integer)ao.get("amount")));
 			        }
 			    }).build();
 	}

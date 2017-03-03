@@ -45,8 +45,8 @@
 		<junit.version>4.11</junit.version>
 		<frms-utils.version>2.0.0</frms-utils.version>
 		<frms-data-service-api.version>1.1.0-SNAPSHOT</frms-data-service-api.version>
-		<frms-core-base.version>4.2.0-SNAPSHOT</frms-core-base.version>
-		<frms-base.version>4.2.0-SNAPSHOT</frms-base.version>
+		<frms-core-base.version>4.2.0</frms-core-base.version>
+		<frms-base.version>4.2.0</frms-base.version>
 		<jodis.version>0.3.0</jodis.version>
 		<frms-common.version>2.0.0</frms-common.version>
 		<ds-online.version>3.4</ds-online.version>

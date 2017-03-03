@@ -570,7 +570,7 @@ public class GlobalFunctions {
 		if(passObj == null)
 			pass = false;
 		if(passObj instanceof Boolean)
-			pass = (boolean)passObj;
+			pass = (Boolean)passObj;
 		if(passObj != null && !(passObj instanceof Boolean))
 			pass = true;
 		if(obj1 instanceof CountNumber){
@@ -623,7 +623,7 @@ public class GlobalFunctions {
 		
 		Date time = new Date();
 		if(obj instanceof Long){
-			time = new Date((long)obj);
+			time = new Date((Long)obj);
 		}
 		if(obj instanceof Date){
 			time = (Date)obj;
@@ -851,7 +851,7 @@ public class GlobalFunctions {
 	
 	@Test
 	public void testSortedList(){
-		SortedSet<Map<String, Object>> set = new TreeSet<>(new Comparator<Map<String, Object>>() {
+		SortedSet<Map<String, Object>> set = new TreeSet<Map<String, Object>>(new Comparator<Map<String, Object>>() {
 
 			@Override
 			public int compare(Map<String, Object> o1, Map<String, Object> o2) {

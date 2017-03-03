@@ -115,6 +115,8 @@ frms.common:
  aerospike:
   host: 10.100.1.236
   port: 3000
+  ns: validator
+  set: br_val
 #redis config
  redis:
   host: localhost

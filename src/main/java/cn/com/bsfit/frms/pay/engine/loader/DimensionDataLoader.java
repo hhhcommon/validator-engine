@@ -37,8 +37,8 @@ public class DimensionDataLoader implements EngineLoader {
     @Value("${frms.engine.threadSize:8}")
     private int coreThreadSize;
     
-    private @Value("${frms.common.aerospike.ns:bsfit}") String defaultNs;
-    private @Value("${frms.common.aerospike.set:frms}") String defaultSet;
+    private @Value("${frms.common.aerospike.ns:validator}") String defaultNs;
+    private @Value("${frms.common.aerospike.set:br_val}") String defaultSet;
     
     @Autowired
     private AerospikeClient aerospikeClient;
@@ -149,6 +149,7 @@ public class DimensionDataLoader implements EngineLoader {
 
                     logger.info("total:[{}]ms, read:[{}]ms, des:[{}]ms, {} byts of {} items", t2 - t0, t1 - t0, t2 - t1,
                         cacheSize, size);
+                    items.addAll(memMap.values());
                 }
 
                 return items;

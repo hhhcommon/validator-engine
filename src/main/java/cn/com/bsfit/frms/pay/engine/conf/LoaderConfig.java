@@ -26,6 +26,10 @@ import cn.com.bsfit.frms.engine.rank.SumRiskAnalyzer;
 import cn.com.bsfit.frms.pay.engine.loader.DimensionDataLoader;
 import cn.com.bsfit.frms.pay.engine.publish.StandardPublishHandlerImpl;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.pool.KryoFactory;
+import com.esotericsoftware.kryo.pool.KryoPool;
+
 @Configuration
 public class LoaderConfig implements FrmsConfigurable {
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -51,7 +55,7 @@ public class LoaderConfig implements FrmsConfigurable {
 	
 	@Bean
 	BasicDataLoader basicDataLoader() {
-		List<DataLoader> dataLoaderList = new ArrayList<>(1);
+		List<DataLoader> dataLoaderList = new ArrayList<DataLoader>(1);
 		dataLoaderList.add(mobNoSqlDataLoader);
 		BasicDataLoader basicDataLoader = new BasicDataLoader();
 		basicDataLoader.setDataLoaders(dataLoaderList);
@@ -86,4 +90,18 @@ public class LoaderConfig implements FrmsConfigurable {
 		logger.info("setting license file to {}", licenseFile);
     	System.setProperty("frms.license", licenseFile);
 	}
+
+	KryoFactory factory = new KryoFactory() {
+		public Kryo create() {
+			Kryo kryo = new Kryo();
+			return kryo;
+		}
+	};
+	
+	@Bean
+    @Primary
+    public KryoPool kyInit() {
+        KryoPool pool = new KryoPool.Builder(factory).softReferences().build();
+        return pool;
+    }
 }
