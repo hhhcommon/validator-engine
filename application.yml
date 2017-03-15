@@ -3,7 +3,7 @@
 #######################################################
 #server configuration
 #Web服务监听端口
-server.port: 9180
+service.port: 9180
 #连接自动释放控制
 tomcat.maxKeepAliveRequests: -1
 ##system environments
@@ -86,7 +86,7 @@ frms:
    basicAuth: true
    username: admin
    password: bangsun
-   rules: http://10.100.1.236:9090/rs/package/binary/download?id=101
+   rules: http://10.100.1.236:9091/rs/package/binary/download?includeSubPkg=true&id=3
 #######################################################
 
  frms.engine:

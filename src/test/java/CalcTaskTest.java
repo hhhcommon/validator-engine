@@ -53,7 +53,7 @@ public class CalcTaskTest {
 		
 		Set<MemCachedItem> set = task.calc(map);
 		
-		System.out.println(set);
+		System.out.println(JSON.toJSONString(set, true));
 		
 		MemCachedItem item = null;
 		for(MemCachedItem memCachedItem : set){
